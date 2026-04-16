@@ -4,7 +4,9 @@ const fs = require("fs");
 const path = require("path");
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: "https://hacker-pshorr777.page.gd"
+}));
 app.use(express.json());
 
 const DATA_FILE = path.join(__dirname, "menu_data.json");
