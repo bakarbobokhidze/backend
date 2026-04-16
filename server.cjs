@@ -1,65 +1,48 @@
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
-require("dotenv").config(); // .env ფაილისთვის
+require("dotenv").config();
 
 const app = express();
 
-const allowedOrigins = [
-  "http://localhost:8080",
-  "https://hacker-pshorr777.page.gd",
-  "https://შენი-საიტი.netlify.app", // აქ ჩაწერ რასაც Netlify მოგცემს
-];
-
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      // ნებას რთავს მოთხოვნებს, რომლებიც სიაშია ან არ აქვს origin (მაგ. Postman)
-      if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-  }),
-);
+// ყველაფრის გამხსნელი CORS
+app.use(cors());
+app.options("*", cors());
 app.use(express.json());
 
-// 1. დაკავშირება MongoDB-სთან
-// პროცესში დაგჭირდება .env ფაილი სადაც ჩაწერ: MONGO_URI=შენი_მისამართი
+// ტესტ როუტი - რომ დავრწმუნდეთ რომ ეს კოდი მუშაობს
+app.get("/", (req, res) => {
+  res.send("CORS IS TOTALLY OPEN - V2");
+});
+
 mongoose
   .connect(
     process.env.MONGO_URI ||
-      "mongodb+srv://baqarboboxidze:baqari123BB@cluster0.3ahnxqz.mongodb.net/?appName=Cluster0",
+      "mongodb+srv://baqarboboxidze:baqari123BB@cluster0.3ahnxqz.mongodb.net/supraMenu",
   )
   .then(() => console.log("✅ Connected to MongoDB"))
-  .catch((err) => console.error("❌ MongoDB connection error:", err));
+  .catch((err) => console.error("❌ MongoDB Error:", err));
 
-// 2. სქემის შექმნა (როგორ გამოიყურება კერძი ბაზაში)
-const dishSchema = new mongoose.Schema({
-  name: String,
-  price: Number,
-  description: String,
-  image: String,
-  inStock: { type: Boolean, default: true },
-  views: { type: Number, default: 0 },
-});
+const Dish = mongoose.model(
+  "Dish",
+  new mongoose.Schema({
+    name: String,
+    price: Number,
+    description: String,
+    image: String,
+    inStock: { type: Boolean, default: true },
+    views: { type: Number, default: 0 },
+  }),
+);
 
-const Dish = mongoose.model("Dish", dishSchema);
-
-// --- API ენდპოინტები ---
-
-// 1. ყველა კერძის წამოღება
 app.get("/api/menu", async (req, res) => {
   try {
-    const menu = await Dish.find();
-    res.json(menu);
+    res.json(await Dish.find());
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// 2. ახალი კერძის დამატება
 app.post("/api/menu", async (req, res) => {
   try {
     const newItem = new Dish(req.body);
