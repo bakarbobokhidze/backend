@@ -1,0 +1,71 @@
+[
+  {
+    "_id": "item_1775662492252",
+    "categoryId": "mains",
+    "name": {
+      "en": "Grilled Chicken Salad",
+      "ge": "ქათმის სალათი გრილზე",
+      "de": "Gegrillter Hähnchensalat"
+    },
+    "description": {
+      "en": "Fresh greens with grilled chicken breast, cherry tomatoes, and balsamic dressing.",
+      "ge": "ნორჩი მწვანილი, გრილზე მომზადებული ქათმის ფილე, ჩერი პომიდორი და ბალზამიკოს დრესინგი.",
+      "de": "Frisches Gemüse mit gegrillter Hähnchenbrust, Kirschtomaten und Balsamico-Dressing."
+    },
+    "price": 18.5,
+    "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c",
+    "inStock": true,
+    "views": 8,
+    "calories": 350,
+    "prepTime": "15-20 min",
+    "badges": [
+      "chef",
+      "new"
+    ],
+    "allergens": [
+      "dairy",
+      "თხილი"
+    ],
+    "portions": [
+      {
+        "label": {
+          "en": "Standard",
+          "ge": "სტანდარტული",
+          "de": "Standard"
+        },
+        "weight": "350g",
+        "price": 18.5
+      },
+      {
+        "label": {
+          "en": "Large",
+          "ge": "დიდი",
+          "de": "Groß"
+        },
+        "weight": "500g",
+        "price": 24
+      }
+    ]
+  },
+  {
+    "_id": "item_1776341761646",
+    "categoryId": "mains",
+    "name": {
+      "en": "khinkali",
+      "ge": "ხინკალი",
+      "de": ""
+    },
+    "description": {
+      "en": "",
+      "ge": "",
+      "de": ""
+    },
+    "price": 1.5,
+    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQASry4OzT8XMZRvOcSUDSOeWXOzA-bEVXH1iTjC1vD1CFN41qvUVwlUKCrjTbrm4q8Xr_6PGocAMVo852AOnzboG1WtYfgTXYHNCel1g&s=10",
+    "badges": [],
+    "allergens": [],
+    "portions": [],
+    "inStock": true,
+    "views": 3
+  }
+]
