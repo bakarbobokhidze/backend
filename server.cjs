@@ -7,7 +7,7 @@ const app = express();
 
 // ყველაფრის გამხსნელი CORS
 app.use(cors());
-app.options("*", cors());
+app.options('(.*)', cors());
 app.use(express.json());
 
 // ტესტ როუტი - რომ დავრწმუნდეთ რომ ეს კოდი მუშაობს
