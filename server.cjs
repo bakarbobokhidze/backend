@@ -56,6 +56,7 @@ app.post("/api/menu", async (req, res) => {
 app.patch("/api/menu/:id", async (req, res) => {
   try {
     const { _id, __v, ...data } = req.body;
+    console.log("PATCH body allergens:", JSON.stringify(data.allergens));
     const flatData = {};
     for (const [key, value] of Object.entries(data)) {
       if (value !== null && value !== undefined && typeof value === "object" && !Array.isArray(value)) {
@@ -66,13 +67,14 @@ app.patch("/api/menu/:id", async (req, res) => {
         flatData[key] = value;
       }
     }
-    res.json(await Dish.findByIdAndUpdate(req.params.id, { $set: flatData }, { new: true }));
+    console.log("flatData allergens:", JSON.stringify(flatData.allergens));
+    res.json(await Dish.findByIdAndUpdate(req.params.id, { $set: flatData }, { returnDocument: "after" }));
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
 app.post("/api/menu/:id/view", async (req, res) => {
   try {
-    const dish = await Dish.findByIdAndUpdate(req.params.id, { $inc: { views: 1 } }, { new: true });
+    const dish = await Dish.findByIdAndUpdate(req.params.id, { $inc: { views: 1 } }, { returnDocument: "after" });
     res.json({ success: true, views: dish.views });
   } catch (err) { res.status(404).send("Not found"); }
 });
@@ -98,7 +100,7 @@ app.post("/api/categories", async (req, res) => {
 
 app.patch("/api/categories/:id", async (req, res) => {
   try {
-    const updated = await Category.findOneAndUpdate({ id: req.params.id }, { $set: req.body }, { new: true });
+    const updated = await Category.findOneAndUpdate({ id: req.params.id }, { $set: req.body }, { returnDocument: "after" });
     res.json(updated);
   } catch (err) { res.status(404).json({ message: "ვერ მოიძებნა" }); }
 });
