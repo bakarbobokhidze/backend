@@ -6,6 +6,7 @@ require("dotenv").config();
 const app = express();
 
 app.use(cors());
+// app.options("*", cors());
 app.use(express.json());
 
 app.get("/", (req, res) => {
@@ -24,14 +25,16 @@ mongoose
 const dishSchema = new mongoose.Schema({
   categoryId: String,
   name: {
-    en: String,
-    ge: String,
-    de: String
+    en: { type: String, default: "" }, // ✅ default: ""
+    ge: { type: String, default: "" },
+    de: { type: String, default: "" },
+    ru: { type: String, default: "" }, // ✅
   },
   description: {
-    en: String,
-    ge: String,
-    de: String
+    en: { type: String, default: "" },
+    ge: { type: String, default: "" },
+    de: { type: String, default: "" },
+    ru: { type: String, default: "" }, // ✅
   },
   price: Number, // აქ შეცდომა გქონდა: Number(price) არ შეიძლება სქემაში
   image: String,
@@ -43,16 +46,19 @@ const dishSchema = new mongoose.Schema({
   allergens: [String],
   portions: [
     {
-      label: { en: String, ge: String, de: String },
+      label: {
+        en: { type: String, default: "" },
+        ge: { type: String, default: "" },
+        de: { type: String, default: "" },
+        ru: { type: String, default: "" }, // ✅
+      },
       weight: String,
-      price: Number
-    }
-  ]
+      price: Number,
+    },
+  ],
 });
 
 const Dish = mongoose.model("Dish", dishSchema);
-
-// --- API ენდპოინტები ---
 
 app.get("/api/menu", async (req, res) => {
   try {
@@ -65,8 +71,12 @@ app.get("/api/menu", async (req, res) => {
 
 app.post("/api/menu", async (req, res) => {
   try {
-    // ამოვიღოთ _id თუ ფრონტიდან მოდის, რადგან MongoDB თავისას ქმნის
     const { _id, ...data } = req.body;
+
+    // name და description-ში ცარიელი ველები დავუმატოთ explicitly
+    data.name = { en: "", ge: "", de: "", ru: "", ...data.name };
+    data.description = { en: "", ge: "", de: "", ru: "", ...data.description };
+
     const newItem = new Dish(data);
     await newItem.save();
     res.status(201).json(newItem);
@@ -79,7 +89,25 @@ app.post("/api/menu", async (req, res) => {
 // განახლება, ნახვები და წაშლა (იგივე რჩება...)
 app.patch("/api/menu/:id", async (req, res) => {
   try {
-    const updatedDish = await Dish.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const { _id, ...data } = req.body;
+
+    // nested ობიექტების flatten - Mongoose-ი ასე სწორად განაახლებს
+    const flatData = {};
+    for (const [key, value] of Object.entries(data)) {
+      if (value && typeof value === "object" && !Array.isArray(value)) {
+        for (const [subKey, subValue] of Object.entries(value)) {
+          flatData[`${key}.${subKey}`] = subValue;
+        }
+      } else {
+        flatData[key] = value;
+      }
+    }
+
+    const updatedDish = await Dish.findByIdAndUpdate(
+      req.params.id,
+      { $set: flatData },
+      { new: true },
+    );
     res.json(updatedDish);
   } catch (err) {
     res.status(404).json({ message: "კერძი ვერ მოიძებნა" });
@@ -88,7 +116,11 @@ app.patch("/api/menu/:id", async (req, res) => {
 
 app.post("/api/menu/:id/view", async (req, res) => {
   try {
-    const dish = await Dish.findByIdAndUpdate(req.params.id, { $inc: { views: 1 } }, { new: true });
+    const dish = await Dish.findByIdAndUpdate(
+      req.params.id,
+      { $inc: { views: 1 } },
+      { new: true },
+    );
     res.json({ success: true, views: dish.views });
   } catch (err) {
     res.status(404).send("Item not found");
