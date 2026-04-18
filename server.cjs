@@ -96,17 +96,99 @@ app.post("/api/menu", async (req, res) => {
 
 app.patch("/api/menu/:id", async (req, res) => {
   try {
-    const { _id, ...data } = req.body;
+    const { _id, __v, ...data } = req.body;
     const flatData = {};
     for (const [key, value] of Object.entries(data)) {
-      if (value && typeof value === "object" && !Array.isArray(value)) {
+      if (
+        value !== null &&
+        value !== undefined &&
+        typeof value === "object" &&
+        !Array.isArray(value)
+      ) {
         for (const [subKey, subValue] of Object.entries(value)) {
-          flatData[`${key}.${subKey}`] = subValue;
+          flatData[`${key}.${subKey}`] = subValue ?? "";
         }
       } else {
         flatData[key] = value;
       }
     }
+    const updatedDish = await Dish.findByIdAndUpdate(
+      req.params.id,
+      { $set: flatData },
+      { new: true },
+    );
+    res.json(updatedDish);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+app.post("/api/menu/:id/view", async (req, res) => {
+  try {
+    const dish = await Dish.findByIdAndUpdate(
+      req.params.id,
+      { $inc: { views: 1 } },
+      { new: true },
+    );
+    res.json({ success: true, views: dish.views });
+  } catch (err) {
+    res.status(404).send("Item not found");
+  }
+});
+
+app.delete("/api/menu/:id", async (req, res) => {
+  try {
+    await Dish.findByIdAndDelete(req.params.id);
+    res.json({ success: true, message: "წარმატებით წაიშალა" });
+  } catch (err) {
+    res.status(404).json({ success: false, message: "კერძი ვერ მოიძებნა" });
+  }
+});
+
+// ---- CATEGORY ENDPOINTS ----
+app.get("/api/categories", async (req, res) => {
+  try {
+    const cats = await Category.find();
+    res.json(cats);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/api/categories", async (req, res) => {
+  try {
+    const cat = new Category(req.body);
+    await cat.save();
+    res.status(201).json(cat);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+app.patch("/api/categories/:id", async (req, res) => {
+  try {
+    const updated = await Category.findOneAndUpdate(
+      { id: req.params.id },
+      { $set: req.body },
+      { new: true },
+    );
+    res.json(updated);
+  } catch (err) {
+    res.status(404).json({ message: "კატეგორია ვერ მოიძებნა" });
+  }
+});
+
+app.delete("/api/categories/:id", async (req, res) => {
+  try {
+    await Category.findOneAndDelete({ id: req.params.id });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(404).json({ success: false });
+  }
+});
+
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
     const updatedDish = await Dish.findByIdAndUpdate(
       req.params.id,
       { $set: flatData },
