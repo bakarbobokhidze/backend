@@ -6,7 +6,6 @@ require("dotenv").config();
 const app = express();
 
 app.use(cors());
-// app.options("*", cors());
 app.use(express.json());
 
 app.get("/", (req, res) => {
@@ -21,22 +20,21 @@ mongoose
   .then(() => console.log("✅ Connected to MongoDB"))
   .catch((err) => console.error("❌ MongoDB Error:", err));
 
-// სქემა უნდა ემთხვეოდეს შენს JSON-ს
 const dishSchema = new mongoose.Schema({
   categoryId: String,
   name: {
-    en: { type: String, default: "" }, // ✅ default: ""
+    en: { type: String, default: "" },
     ge: { type: String, default: "" },
     de: { type: String, default: "" },
-    ru: { type: String, default: "" }, // ✅
+    ru: { type: String, default: "" },
   },
   description: {
     en: { type: String, default: "" },
     ge: { type: String, default: "" },
     de: { type: String, default: "" },
-    ru: { type: String, default: "" }, // ✅
+    ru: { type: String, default: "" },
   },
-  price: Number, // აქ შეცდომა გქონდა: Number(price) არ შეიძლება სქემაში
+  price: Number,
   image: String,
   inStock: { type: Boolean, default: true },
   views: { type: Number, default: 0 },
@@ -50,7 +48,7 @@ const dishSchema = new mongoose.Schema({
         en: { type: String, default: "" },
         ge: { type: String, default: "" },
         de: { type: String, default: "" },
-        ru: { type: String, default: "" }, // ✅
+        ru: { type: String, default: "" },
       },
       weight: String,
       price: Number,
@@ -58,8 +56,21 @@ const dishSchema = new mongoose.Schema({
   ],
 });
 
-const Dish = mongoose.model("Dish", dishSchema);
+const categorySchema = new mongoose.Schema({
+  id: String,
+  name: {
+    en: { type: String, default: "" },
+    ge: { type: String, default: "" },
+    de: { type: String, default: "" },
+    ru: { type: String, default: "" },
+  },
+  icon: String,
+});
 
+const Dish = mongoose.model("Dish", dishSchema);
+const Category = mongoose.model("Category", categorySchema);
+
+// ---- MENU ENDPOINTS ----
 app.get("/api/menu", async (req, res) => {
   try {
     const menu = await Dish.find();
@@ -72,11 +83,8 @@ app.get("/api/menu", async (req, res) => {
 app.post("/api/menu", async (req, res) => {
   try {
     const { _id, ...data } = req.body;
-
-    // name და description-ში ცარიელი ველები დავუმატოთ explicitly
     data.name = { en: "", ge: "", de: "", ru: "", ...data.name };
     data.description = { en: "", ge: "", de: "", ru: "", ...data.description };
-
     const newItem = new Dish(data);
     await newItem.save();
     res.status(201).json(newItem);
@@ -86,12 +94,9 @@ app.post("/api/menu", async (req, res) => {
   }
 });
 
-// განახლება, ნახვები და წაშლა (იგივე რჩება...)
 app.patch("/api/menu/:id", async (req, res) => {
   try {
     const { _id, ...data } = req.body;
-
-    // nested ობიექტების flatten - Mongoose-ი ასე სწორად განაახლებს
     const flatData = {};
     for (const [key, value] of Object.entries(data)) {
       if (value && typeof value === "object" && !Array.isArray(value)) {
@@ -102,7 +107,6 @@ app.patch("/api/menu/:id", async (req, res) => {
         flatData[key] = value;
       }
     }
-
     const updatedDish = await Dish.findByIdAndUpdate(
       req.params.id,
       { $set: flatData },
@@ -133,6 +137,48 @@ app.delete("/api/menu/:id", async (req, res) => {
     res.json({ success: true, message: "წარმატებით წაიშალა" });
   } catch (err) {
     res.status(404).json({ success: false, message: "კერძი ვერ მოიძებნა" });
+  }
+});
+
+// ---- CATEGORY ENDPOINTS ----
+app.get("/api/categories", async (req, res) => {
+  try {
+    const cats = await Category.find();
+    res.json(cats);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/api/categories", async (req, res) => {
+  try {
+    const cat = new Category(req.body);
+    await cat.save();
+    res.status(201).json(cat);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+app.patch("/api/categories/:id", async (req, res) => {
+  try {
+    const updated = await Category.findOneAndUpdate(
+      { id: req.params.id },
+      { $set: req.body },
+      { new: true },
+    );
+    res.json(updated);
+  } catch (err) {
+    res.status(404).json({ message: "კატეგორია ვერ მოიძებნა" });
+  }
+});
+
+app.delete("/api/categories/:id", async (req, res) => {
+  try {
+    await Category.findOneAndDelete({ id: req.params.id });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(404).json({ success: false });
   }
 });
 
