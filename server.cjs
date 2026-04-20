@@ -62,21 +62,27 @@ app.post("/api/menu", async (req, res) => {
 
 app.patch("/api/menu/:id", async (req, res) => {
   try {
+    // ამოვიღოთ ზედმეტი ველები, რომლებსაც ბაზა არ იღებს
     const { _id, __v, ...data } = req.body;
-    console.log("PATCH body allergens:", JSON.stringify(data.allergens));
-    const flatData = {};
-    for (const [key, value] of Object.entries(data)) {
-      if (value !== null && value !== undefined && typeof value === "object" && !Array.isArray(value)) {
-        for (const [subKey, subValue] of Object.entries(value)) {
-          flatData[`${key}.${subKey}`] = subValue ?? "";
-        }
-      } else {
-        flatData[key] = value;
-      }
+
+    console.log("მიღებული ალერგენები:", JSON.stringify(data.allergens));
+
+    // პირდაპირ ვაახლებთ მთლიან ობიექტს
+    const updatedDish = await Dish.findByIdAndUpdate(
+      req.params.id,
+      { $set: data }, // Mongoose თავად მიხედავს ველების განახლებას
+      { new: true, runValidators: true } // დააბრუნებს განახლებულს და გადაამოწმებს სქემასთან
+    );
+
+    if (!updatedDish) {
+      return res.status(404).json({ message: "კერძი ვერ მოიძებნა" });
     }
-    console.log("flatData allergens:", JSON.stringify(flatData.allergens));
-    res.json(await Dish.findByIdAndUpdate(req.params.id, { $set: flatData }, { returnDocument: "after" }));
-  } catch (err) { res.status(500).json({ message: err.message }); }
+
+    res.json(updatedDish);
+  } catch (err) {
+    console.error("PATCH Error:", err.message);
+    res.status(500).json({ message: err.message });
+  }
 });
 
 app.post("/api/menu/:id/view", async (req, res) => {
