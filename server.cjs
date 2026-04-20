@@ -32,7 +32,7 @@ const dishSchema = new mongoose.Schema({
       de: { type: String, default: "" },
       ru: { type: String, default: "" },
     }
-  ],,
+  ],
   portions: [{ label: { en: { type: String, default: "" }, ge: { type: String, default: "" }, de: { type: String, default: "" }, ru: { type: String, default: "" } }, weight: String, price: Number }],
 });
 
